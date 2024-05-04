@@ -4,7 +4,7 @@ import time
 import os
 import random
 pygame.font.init()
-WIN_WIDTH = 500
+WIN_WIDTH = 450
 WIN_HEIGHT = 800
 
 BIRD_IMGS = [
@@ -16,8 +16,8 @@ PIPE_IMG = pygame.transform.scale2x(pygame.image.load(os.path.join("assets", "pi
 BASE_IMG = pygame.transform.scale2x(pygame.image.load(os.path.join("assets", "base.png")))
 BG_IMG = pygame.transform.scale2x(pygame.image.load(os.path.join("assets", "bg.png")))
 
-STAT_FONT = pygame.font.SysFont("arial", 50)
-
+STAT_FONT = pygame.font.SysFont("arial", 30)
+GEN = 0
 
 class Bird:
     IMGS = BIRD_IMGS
@@ -155,9 +155,11 @@ class Base:
         win.blit(self.IMG, (self.x2, self.y))
 
 
-def draw_window(win, bird, pipes, base, score):
+def draw_window(win, birds, pipes, base, score, gen):
     win.blit(BG_IMG, (0,0))
-    bird.draw(win)
+
+    for bird in birds:
+        bird.draw(win)
 
     for pipe in pipes:
         pipe.draw(win)
@@ -165,31 +167,35 @@ def draw_window(win, bird, pipes, base, score):
     base.draw(win)
     text = STAT_FONT.render(f"Score: {score}", 1, (255,255,255))
     win.blit(text, (WIN_WIDTH - 10 - text.get_width(), 10))
+
+    text = STAT_FONT.render(f"Generation: {gen}", 1, (255,255,255))
+    win.blit(text, (10 , 10))
+
+    text = STAT_FONT.render(f"Number Alive: {len(birds)}", 1, (255,255,255))
+    win.blit(text, (10, 60))
+
     pygame.display.update()
 
 
 
-def main(genomes = None, config = None):
+def main(genomes, config):
+    global GEN
+    GEN += 1
     nets = []
     ge = []
     birds = []
 
     base = Base(730)
-    pipes = [Pipe(700)]
+    pipes = [Pipe(450)]
     score = 0
 
-    if human:
+    for _, g in genomes:
+        net = neat.nn.FeedForwardNetwork.create(g, config)
+        nets.append(net)
         birds.append(Bird(230,350))
+        g.fitness = 0
+        ge.append(g)
 
-    if genomes is not None:
-        for g in genomes:
-            net = neat.nn.FeedForwardNetwork(g, config)
-            nets.append(net)
-            birds.append(Bird(230,350))
-            g.fitness = 0
-            ge.append(g)
-    else:
-        human = True
 
     win = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
     clock = pygame.time.Clock()
@@ -200,10 +206,27 @@ def main(genomes = None, config = None):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-            if event.type == pygame.KEYDOWN and human:
-                bird.jump()
+                pygame.quit()
+                quit()
         
-        bird.move()
+        pipe_ind = 0
+        if len(birds) > 0: 
+            if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].PIPE_TOP.get_width():
+                pipe_ind = 1
+        else:
+            run = False
+            continue
+
+        for i, bird in enumerate(birds):
+            bird.move()
+            ge[i].fitness += .1
+
+            output = nets[i].activate((bird.y, abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom)))
+
+            if output[0] > 0.5:
+                bird.jump()
+            
+
 
         base.move()
 
@@ -230,23 +253,21 @@ def main(genomes = None, config = None):
             score += 1
             for g in ge:
                 g.fitness += 5
-            pipes.append(Pipe(700))
+            pipes.append(Pipe(600))
         
         for r in rem:
             pipes.remove(r)
         
         for i, bird in enumerate(birds):
-            if bird.y + bird.img.get_height() > 730:
+            if bird.y + bird.img.get_height() > 730 or bird.y < 0:
                 birds.pop(i)
                 ge.pop(i)
                 nets.pop(i)
 
-        draw_window(win, bird, pipes, base, score)
+        draw_window(win, birds, pipes, base, score, GEN)
 
-    pygame.quit()
-    quit()
 
-# main()
+
 
 def run(config_path):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, 
@@ -263,3 +284,4 @@ def run(config_path):
 if __name__ == '__main__':
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "config-feedforward.txt")
+    run(config_path)
