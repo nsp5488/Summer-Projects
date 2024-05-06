@@ -1,3 +1,6 @@
+use std::io;
+
+
 fn main() {
     println!("Hello, world!");
 
@@ -14,7 +17,18 @@ fn main() {
     let c = 15;
 
     println!("{f} in farenheit is {} in celsius", farenheit_to_celsius(f));
-    println!("{c} in celsius iin {} in farenheit", celsius_to_farenheit(c)); 
+    println!("{c} in celsius is {} in farenheit", celsius_to_farenheit(c)); 
+
+    println!("Enter a number to get the fib of that number: ");
+    let mut fib_num = String::new();
+    io::stdin()
+        .read_line(&mut fib_num)
+        .expect("Enter a number!");
+
+    let fib_num : u32 = fib_num.trim().parse().expect("Enter a valid positive number");
+
+    println!("The fib of {fib_num} is {}", recursive_fib(fib_num));
+
 }
 
 // Random function prints x
@@ -40,6 +54,16 @@ fn fib(n: usize) -> i32 {
     }
     f[n]
 } 
+
+fn recursive_fib(n:u32) -> i32 {
+    if n == 0 {
+        return 0;
+    }
+    if n == 1 {
+        return 1;
+    }
+    return recursive_fib(n-1) + recursive_fib(n-2);
+}
 
 // Converts Farenheit to celsius
 fn farenheit_to_celsius(f:i32) -> f32 {
