@@ -10,7 +10,7 @@ fn main() {
 
     println!("{x} + {y} = {}",add(x,y));
 
-    let n:usize = 6;
+    let n:usize = 75;
     println!("The {n}th fibonacci number is {}", fib(n));
 
     let f = 40;
@@ -43,8 +43,8 @@ fn add(x:i32, y:i32) -> i32 {
 
 
 // Computes the nth fibonacci number
-fn fib(n: usize) -> i32 {
-    let mut f = [0;7];
+fn fib(n: usize) -> u64 {
+    let mut f = [0;256];
     f[0] = 0;
     f[1] = 1;
     let mut c = 2;
