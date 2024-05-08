@@ -1,23 +1,64 @@
+use std::collections::HashMap;
+
 fn main() {
-    // vectors();
+    vectors();
     strings();
+    hashmaps();
+}
+
+fn hashmaps() {
+    let mut nums:Vec<i32> = vec![6, 8, 2, 4, 1, 2];
+    nums.sort();
+    let median = nums.get(nums.len() / 2).unwrap_or(&0);
+
+    let mut total = 0;
+    let mut map: HashMap<i32, i32> = HashMap::new();
+
+    for num in &nums {
+        total += num;
+        let count = map.entry(*num).or_insert(1);
+        *count += 1
+    }
+    let mean:f64 = total as f64 / nums.len() as f64;
+
+    let mut max = -1;
+    let mut max_key = 0;
+    for (key, value) in &map {
+        if *value > max {
+            max = *value;
+            max_key = *key;
+        }
+    }
+
+    println!("Nums has mean: {mean}, median: {median}, and mode: {max_key}");
+
+
 }
 
 fn strings() {
-    let mut s = String::new();
-    let data = "initial contents";
+    let _s = String::new();
 
-    let s = data.to_string();
-
-    // the method also works on a literal directly:
-    let s = "initial contents".to_string();
-    let s = String::from("initial contents");
     let mut s1 = String::from("foo");
     let s2 = "bar";
     s1.push_str(s2);
     println!("s2 is {s2}");
     let mut s = String::from("lo");
     s.push('l');
+
+
+    let vowels = vec!['a', 'e', 'i', 'o', 'u'];
+
+    let input_str = String::from("Apple");
+    let mut iterator = input_str.chars();
+    let first = iterator.next().unwrap();
+
+    if vowels.contains(&first.to_ascii_lowercase()) {
+        println!("{}-hay", input_str);
+    } else {
+        let remaining: String = iterator.take(input_str.len() - 1).collect();
+
+        println!{"{}-{}ay", &remaining, first};
+    }
 }
 
 fn vectors() {
